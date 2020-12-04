@@ -1,83 +1,62 @@
 import sys
 import threading
 
-sys.setrecursionlimit(1 << 30)
-threading.stack_size(1 << 27)
+# On AVL trees:
+# https://www.geeksforgeeks.org/avl-tree-set-1-insertion/
+# https://medium.com/@aksh0001/avl-trees-in-python-bc3d0aeb9150
+# stepick from CS Center, Kulikov
 
 class Node:
     def __init__(self, key):
         self.key = key
 
         self.height = 1
-
-        self.parent = None
         self.left = None
         self.right = None
         
-
 class AVLTree:
     def __init__(self):
         self.root = None
         
     def next(self, key):
-        check_ex = self.exists(key)
+        next_node = self._next(self.root, key, None)
+        
+        if next_node is None:
+            return 
+        return next_node.key
+        
+    # от корня -> когда налево запоминаем min
+    def _next(self, root, key, acc):
+        if root is None:
+            return acc
+        
+        if key < root.key:
+            if acc is None or root.key < acc.key:
+                return self._next(root.left, key, root)
+            else:
+                return self._next(root.left, key, acc)
+        else:
+            return self._next(root.right, key, acc)
 
-        if not check_ex:
-            self.insert(key)
-        
-        next_elem = self._next(key)
-        
-        if not check_ex:
-            self.delete(key)
-        return next_elem
-        
-    def _next(self, key):  
-        node = self._get_node(self.root, key)
-        
-        if node.right is not None:
-            head = node.right
-            while head.left is not None:
-                head = head.left
-            return head.key    
-        
-        p = node.parent
-        while p is not None and p.right == node:
-            p = p.parent
-            node = node.parent
-        
-        if p is not None:
-            return p.key
-         
-    
+    # от корня -> когда направо запоминаем max
     def prev(self, key):
-        check_ex = self.exists(key)
+        prev_node = self._prev(self.root, key, None)
         
-        if not check_ex:
-            self.insert(key)
-            
-        prev_elem = self._prev(key)
-        
-        if not check_ex:
-            self.delete(key)
-            
-        return prev_elem
+        if prev_node is None:
+            return
+        return prev_node.key
                     
-    def _prev(self, key):
-        node = self._get_node(self.root, key)
-
-        if node.left is not None:
-            head = node.left
-            while head.right is not None:
-                head = head.right
-            return head.key
+    def _prev(self, root, key, acc):
+        if root is None:
+            return acc
         
-        p = node.parent
-        while p is not None and p.left == node:
-            p = p.parent
-            node = node.parent
-            
-        if p is not None:
-            return p.key
+        if key <= root.key:
+            return self._prev(root.left, key, acc)
+        else:
+            if acc is None or root.key > acc.key:
+                return self._prev(root.right, key, root)
+            else:
+                return self._prev(root.right, key, acc)
             
     def insert(self, key):
         self.root = self._insert(self.root, key)
@@ -88,10 +67,8 @@ class AVLTree:
         
         if key < root.key:
             root.left = self._insert(root.left, key)
-            root.left.parent = root
         elif key > root.key:
             root.right = self._insert(root.right, key)
-            root.right.parent = root
         else:
             return root
         
@@ -132,32 +109,24 @@ class AVLTree:
         
         if key < root.key:
             root.left = self._delete(root.left, key)
-            if root.left is not None:
-                root.left.parent = root
         elif key > root.key:
             root.right = self._delete(root.right, key)
-            if root.right is not None:
-                root.right.parent = root
         else:
             if root.left is None or root.right is None:
                 leaf = root.left or root.right
-                if leaf is not None:
-                    leaf.parent = None
                 return leaf
             else:
                 min_leaf = self._get_min_leaf(root.right)
 
                 root.key = min_leaf.key
                 root.right = self._delete(root.right, min_leaf.key)
-                if root.right is not None:
-                    root.right.parent = root
         
         root.height = max(self._height(root.left), self._height(root.right)) + 1
         
         return self._rebalance(root)
                 
     def _get_min_leaf(self, root):
-        if root.left is None and root.right is None: # or or and ???
+        if root.left is None:
             return root
         return self._get_min_leaf(root.left)
 
@@ -178,14 +147,14 @@ class AVLTree:
         if root_balance > 1 and root_left_balance >= 0:
             return self._right_rotate(root)
         
-        # Right-Right
-        if root_balance < -1 and root_right_balance <= 0:
-            return self._left_rotate(root)
-        
         # Left-Right
         if root_balance > 1 and root_left_balance < 0:
             root.left = self._left_rotate(root.left)
             return self._right_rotate(root)
+        
+        # Right-Right
+        if root_balance < -1 and root_right_balance <= 0:
+            return self._left_rotate(root)
         
         # Right-Left
         if root_balance < -1 and root_right_balance > 0:
@@ -196,14 +165,9 @@ class AVLTree:
                               
     def _left_rotate(self, root):
         new_root = root.right
-        new_root.parent = root.parent
         
         root.right = new_root.left
-        root.parent = new_root
-        
-        if root.right is not None:
-            root.right.parent = root
-        
+
         new_root.left = root
         
         root.height = max(self._height(root.left), self._height(root.right)) + 1
@@ -213,13 +177,8 @@ class AVLTree:
     
     def _right_rotate(self, root):         
         new_root = root.left
-        new_root.parent = root.parent
-        
+
         root.left = new_root.right
-        
-        root.parent = new_root
-        if root.left is not None:
-            root.left.parent = root
         
         new_root.right = root        
         
@@ -227,44 +186,6 @@ class AVLTree:
         new_root.height = max(self._height(new_root.left), self._height(new_root.right)) + 1
         
         return new_root
-    
-    def _pre_order(self, root, nodes):
-        if root is None:
-            return
-        
-        nodes.append(root.key) 
-        self._pre_order(root.left, nodes)
-        self._pre_order(root.right, nodes)
-
-
-    def printTree(self, node, level=0):
-        if node != None:
-            self.printTree(node.right, level + 1)
-            print(' ' * 5 * level + '->', node.key)
-            self.printTree(node.left, level + 1)
-
-
-def test():
-    tree = AVLTree() 
-    values = [10, 20, 30, 40, 50, 25]
-
-    for value in values:
-        tree.insert(value)
-        
-    nodes = []
-    tree._pre_order(tree.root, nodes)
-    assert nodes == [30, 20, 10, 25, 40, 50]
-    
-    # tree.printTree(tree.root)
-    
-    for value in values + [15, 0, 45, 25]:
-        assert tree.exists(value) == (value in values)
-        
-    for val, next_ in [(10, 20), (20, 25), (25, 30), (40, 50), (50, None), (15, 20), (22, 25)]:
-        assert tree.next(val) == next_
-    
-    for val, prev in [(10, None), (20, 10), (25, 20), (30, 25), (40, 30), (50, 40), (15, 10), (32, 30), (45, 40)]:
-        assert tree.prev(val) == prev
         
     
 def main():
@@ -273,10 +194,7 @@ def main():
     for operation in sys.stdin:
         operation, x = operation.split()
         x = int(x)
-        
-        # print("--" * 8)
-        # print(operation, x)
-        
+                
         if operation == "insert":
             tree.insert(x)
         elif operation == "delete":
@@ -289,15 +207,8 @@ def main():
         elif operation == "prev":
             prev_val = tree.prev(x)
             print("none" if prev_val is None else prev_val)
-            
-
-        # tree.printTree(tree.root) 
-        # print()   
+ 
         
 
 if __name__ == "__main__":
-    main_thread = threading.Thread(target=main)
-    main_thread.start()
-    main_thread.join()
-    # main_test()
-    # test()
+    main()

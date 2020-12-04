@@ -46,18 +46,7 @@ class Graph:
                     return True, min_on_path     
         
         return False, 0
-    
-    
-    def dfs_residual(self, root):
-        self.visited[root] = True
         
-        for e_idx in self.adj[root]:
-            edge = self.edges[e_idx]
-            
-            if edge.f < edge.c and not self.visited[edge.b]:
-                self.dfs_residual(edge.b)
-    
-    
     def ford_fulkerson(self):
         self.visited = [-1] * self.n
         self.counter = 0
@@ -73,12 +62,9 @@ class Graph:
             self.counter = self.counter + 1
         
         # find min cut edges -> all that from visited to not visited (bcs capacity 0)   
-        self.visited = [False] * self.n
-        self.dfs_residual(self.s)
-        
         edge_cut = []
         for edge in self.edges:
-            if self.visited[edge.a] and not self.visited[edge.b]:
+            if self.visited[edge.a] == self.counter and self.visited[edge.b] != self.counter:
                 edge_cut.append(edge.idx)
 
         return flow_size, edge_cut
