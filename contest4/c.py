@@ -17,7 +17,6 @@ class UnionFind:
             points_a += self.points[a]
             
         return points_a
-
     
     def union(self, a, b):
         a = self.find(a)
