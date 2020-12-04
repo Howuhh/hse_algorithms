@@ -1,8 +1,4 @@
 import sys
-import threading
-
-# sys.setrecursionlimit(1 << 30)
-# threading.stack_size(1 << 27)
 
 class Node:
     def __init__(self, key):
@@ -152,28 +148,7 @@ class AVLTree:
         new_root.size = self._size(new_root.left) + self._size(new_root.right) + 1
         
         return new_root
-    
 
-    def printTree(self, node, level=0):
-        if node != None:
-            self.printTree(node.right, level + 1)
-            print(' ' * 5 * level + '->', node.key)
-            self.printTree(node.left, level + 1)
-    
-    
-def test():
-    tree = AVLTree()
-    
-    for value in [0, 1, 2, 3, 4, 5, 6]:
-        tree.insert(value)
-    
-    tree.printTree(tree.root)
-    # print(tree.root.size)
-    # print(tree.root.left.size)
-    # print(tree.root.right.size)
-    tree.k_max(7)
-    
-    
 def main():
     tree = AVLTree()
     
@@ -192,6 +167,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # main_thread = threading.Thread(target=main)
-    # main_thread.start()
-    # main_thread.join()

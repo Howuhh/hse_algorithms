@@ -79,7 +79,6 @@ def main():
         
     graph.ford_fulkerson()
 
-    
 
 if __name__ == "__main__":
     main_thread = threading.Thread(target=main)

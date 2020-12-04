@@ -25,11 +25,11 @@ class Graph:
         self.edge_idx = self.edge_idx + 1
                 
         
-    def dfs(self, root, min_cap):        
+    def dfs(self, root, min_cap):   
+        self.visited[root] = self.counter     
+        
         if root == self.t:
             return True, min_cap
-        
-        self.visited[root] = self.counter
         
         for e_idx in self.adj[root]:
             edge, back_edge = self.edges[e_idx], self.edges[e_idx ^ 1]

@@ -1,11 +1,9 @@
 import sys
-import threading
 
 # On AVL trees:
 # https://www.geeksforgeeks.org/avl-tree-set-1-insertion/
 # https://medium.com/@aksh0001/avl-trees-in-python-bc3d0aeb9150
 # stepick from CS Center, Kulikov
-
 class Node:
     def __init__(self, key):
         self.key = key
@@ -208,7 +206,6 @@ def main():
             prev_val = tree.prev(x)
             print("none" if prev_val is None else prev_val)
  
-        
 
 if __name__ == "__main__":
     main()
